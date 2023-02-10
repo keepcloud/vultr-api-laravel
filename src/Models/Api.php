@@ -36,14 +36,14 @@ class Api
      * @return json
      * 
      */
-    public function get(string $url, array $query=[])
+    public function get(string $url)
     {
         $url = $this->endpoint . $url;
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_URL => $url,
-            CURLOPT_POSTFIELDS => json_encode($query),
+            CURLOPT_CUSTOMREQUEST => 'GET',
             CURLOPT_HTTPHEADER => $this->headers
         ]);
         $response = curl_exec($curl);
@@ -99,12 +99,35 @@ class Api
     }
 	
     /**
+     * Patch method
+     *
+     * @var string $url
+     * @var array $data	 
+     * @return json
+     */
+    public function patch(string $url, array $data=[])
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_URL => $this->endpoint . $url,
+            CURLOPT_CUSTOMREQUEST => 'PATCH',
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => $this->headers
+        ]);
+        $response = curl_exec($curl);
+        curl_close($curl);
+        
+        return $response;
+    }
+
+    /**
      * delete method
      *
      * @var string $url
      * @return json
      */
-    public function delete($url)
+    public function delete(string $url)
     {
         $curl = curl_init();
         curl_setopt_array($curl, [
