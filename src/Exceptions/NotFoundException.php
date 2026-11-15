@@ -2,6 +2,4 @@
 
 namespace KeepCloud\Vultr\Exceptions;
 
-class NotFoundException extends VultrException
-{
-}
+class NotFoundException extends VultrException {}

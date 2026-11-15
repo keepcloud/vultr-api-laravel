@@ -36,7 +36,7 @@ class Vultr
      */
     public function __call(string $name, array $arguments): mixed
     {
-        return static::call($name, $arguments);
+        return self::call($name, $arguments);
     }
 
     /**
@@ -44,7 +44,7 @@ class Vultr
      */
     public static function __callStatic(string $name, array $arguments): mixed
     {
-        return static::call($name, $arguments);
+        return self::call($name, $arguments);
     }
 
     /**

@@ -2,6 +2,4 @@
 
 namespace KeepCloud\Vultr\Exceptions;
 
-class ServerException extends VultrException
-{
-}
+class ServerException extends VultrException {}

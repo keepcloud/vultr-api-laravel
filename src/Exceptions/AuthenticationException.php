@@ -2,6 +2,4 @@
 
 namespace KeepCloud\Vultr\Exceptions;
 
-class AuthenticationException extends VultrException
-{
-}
+class AuthenticationException extends VultrException {}
