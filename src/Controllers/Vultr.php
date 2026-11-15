@@ -1,58 +1,74 @@
 <?php
+
 /**
- * Vultr api controller
+ * Legacy v1 client.
  *
- * @package keepcloud/vultr-api-laravel
  * @author Edison Costa <edison@keepcloud.io>
- */    
+ */
+
 namespace KeepCloud\Vultr\Controllers;
 
-use KeepCloud\Vultr\Models\Api;
+use BadMethodCallException;
+use KeepCloud\Vultr\VultrClient;
 
+/**
+ * @deprecated 2.0 Use KeepCloud\Vultr\Facades\Vultr or KeepCloud\Vultr\VultrClient.
+ *             Kept for v1 compatibility: never throws on HTTP errors and
+ *             returns the decoded error body instead.
+ *
+ * @method mixed get(string $url, array<string, mixed> $query = [])
+ * @method mixed post(string $url, array<string, mixed> $data = [])
+ * @method mixed put(string $url, array<string, mixed> $data = [])
+ * @method mixed patch(string $url, array<string, mixed> $data = [])
+ * @method mixed delete(string $url)
+ * @method static mixed get(string $url, array<string, mixed> $query = [])
+ * @method static mixed post(string $url, array<string, mixed> $data = [])
+ * @method static mixed put(string $url, array<string, mixed> $data = [])
+ * @method static mixed patch(string $url, array<string, mixed> $data = [])
+ * @method static mixed delete(string $url)
+ */
 class Vultr
 {
-    protected $api ;
-    protected $token ;
-    
+    private const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
+
     /**
-     * Constructor
-     *
-     * Get config and and create new api
-     *
-     * @return void
+     * @param  array<int, mixed>  $arguments
      */
-    public function __construct()
+    public function __call(string $name, array $arguments): mixed
     {
-        $this->token = config('vultr.token') ;
-        $this->api = new Api ;
+        return static::call($name, $arguments);
     }
-    
+
     /**
-     * Overload static methods for facade 
-     *
-     * @var string $name
-     * @var array $arguments	 
-     * @return json|array|object
+     * @param  array<int, mixed>  $arguments
      */
-    public static function __callStatic(string $name, array $arguments)
+    public static function __callStatic(string $name, array $arguments): mixed
     {
-        $api = new Api ;
-        $response = call_user_func_array([$api,$name], $arguments) ;
-        $response = json_decode($response) ;
-        return $response ;
+        return static::call($name, $arguments);
     }
-    
+
     /**
-     * Overload methods 
-     *
-     * @var string $url
-     * @var array $data	 
-     * @return json|array|object
+     * @param  array<int, mixed>  $arguments
      */
-    public function __call($name, $arguments)
+    private static function call(string $name, array $arguments): mixed
     {
-        $response = call_user_func_array([$this->api,$name], $arguments) ;
-        $response = json_decode($response) ;
-        return $response ;
+        $name = strtolower($name);
+
+        if (! in_array($name, self::VERBS, true)) {
+            throw new BadMethodCallException(sprintf('Method %s::%s does not exist.', static::class, $name));
+        }
+
+        $path = (string) ($arguments[0] ?? '');
+        $payload = $arguments[1] ?? [];
+
+        [$query, $data] = match ($name) {
+            'get' => [$payload, null],
+            'delete' => [[], null],
+            default => [[], $payload],
+        };
+
+        $response = app(VultrClient::class)->send($name, $path, $query, $data);
+
+        return json_decode($response->body());
     }
 }

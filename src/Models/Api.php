@@ -1,132 +1,60 @@
 <?php
+
 /**
- * Curl wrapper
+ * Legacy v1 raw client.
  *
- * @package keepcloud/vultr-api-laravel
  * @author Edison Costa <edison@keepcloud.io>
  */
+
 namespace KeepCloud\Vultr\Models;
 
+use KeepCloud\Vultr\VultrClient;
+
+/**
+ * @deprecated 2.0 Use KeepCloud\Vultr\VultrClient::send().
+ *             Returns the raw response body and never throws on HTTP errors.
+ */
 class Api
 {
-    protected $endpoint;
-    protected $headers;
-    protected $timeout;
-
     /**
-     * Constructor
-     *
-     * Get config for endpoint and set global headers
-     *
-     * @return void
+     * @param  array<string, mixed>  $query
      */
-    public function __construct()
+    public function get(string $url, array $query = []): string
     {
-        $this->endpoint = rtrim(config('vultr.endpoint', 'https://api.vultr.com/v2/'), '/') . '/';
-        $this->timeout = (int) config('vultr.timeout', 30);
-        $this->headers = [
-            'Content-Type: application/json',
-            'Accept: application/json',
-            'Authorization: Bearer '.config('vultr.token')
-        ];
+        return $this->client()->send('GET', $url, $query)->body();
     }
 
     /**
-     * Get method
-     *
-     * @var string $url
-     * @var array $query
-     * @return string|false
+     * @param  array<string, mixed>  $data
      */
-    public function get(string $url, array $query = [])
+    public function post(string $url, array $data = []): string
     {
-        if (!empty($query)) {
-            $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($query);
-        }
-
-        return $this->request('GET', $url);
+        return $this->client()->send('POST', $url, [], $data)->body();
     }
 
     /**
-     * Post method
-     *
-     * @var string $url
-     * @var array $data
-     * @return string|false
+     * @param  array<string, mixed>  $data
      */
-    public function post(string $url, array $data = [])
+    public function put(string $url, array $data = []): string
     {
-        return $this->request('POST', $url, $data);
+        return $this->client()->send('PUT', $url, [], $data)->body();
     }
 
     /**
-     * Put method
-     *
-     * @var string $url
-     * @var array $data
-     * @return string|false
+     * @param  array<string, mixed>  $data
      */
-    public function put(string $url, array $data = [])
+    public function patch(string $url, array $data = []): string
     {
-        return $this->request('PUT', $url, $data);
+        return $this->client()->send('PATCH', $url, [], $data)->body();
     }
 
-    /**
-     * Patch method
-     *
-     * @var string $url
-     * @var array $data
-     * @return string|false
-     */
-    public function patch(string $url, array $data = [])
+    public function delete(string $url): string
     {
-        return $this->request('PATCH', $url, $data);
+        return $this->client()->send('DELETE', $url)->body();
     }
 
-    /**
-     * Delete method
-     *
-     * @var string $url
-     * @return string|false
-     */
-    public function delete(string $url)
+    private function client(): VultrClient
     {
-        return $this->request('DELETE', $url);
-    }
-
-    /**
-     * Send the request
-     *
-     * @var string $method
-     * @var string $url
-     * @var array|null $data
-     * @return string|false
-     */
-    protected function request(string $method, string $url, $data = null)
-    {
-        $options = [
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $this->endpoint . ltrim($url, '/'),
-            CURLOPT_CUSTOMREQUEST => $method,
-            CURLOPT_HTTPHEADER => $this->headers,
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT => $this->timeout,
-        ];
-
-        if ($data !== null) {
-            // An empty body must be sent as a JSON object, not an empty array.
-            $options[CURLOPT_POSTFIELDS] = empty($data) ? '{}' : json_encode($data);
-        }
-
-        $curl = curl_init();
-        curl_setopt_array($curl, $options);
-        $response = curl_exec($curl);
-
-        // curl_close() is a no-op since PHP 8.0 and deprecated since PHP 8.5.
-        if (PHP_VERSION_ID < 80000) {
-            curl_close($curl);
-        }
-
-        return $response;
+        return app(VultrClient::class);
     }
 }
