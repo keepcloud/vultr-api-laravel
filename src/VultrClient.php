@@ -43,6 +43,21 @@ final class VultrClient
     }
 
     /**
+     * Get a new client using another API token (e.g. another Vultr account).
+     */
+    public function withToken(string $token): self
+    {
+        return new self(
+            $token,
+            $this->endpoint,
+            $this->timeout,
+            $this->connectTimeout,
+            $this->retries,
+            $this->retryDelay,
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $query
      */
     public function get(string $path, array $query = []): mixed

@@ -177,3 +177,23 @@ it('does not retry POST on connection error', function () {
     expect(fn () => client()->post('instances'))->toThrow(ConnectionException::class);
     expect($calls)->toBe(1);
 });
+
+it('uses a different token per call without mutating the singleton', function () {
+    Http::fake(['*' => Http::response(['account' => []])]);
+    $client = client();
+
+    $client->withToken('other')->get('account');
+    $client->get('account');
+
+    $tokens = Http::recorded()->map(fn ($pair) => $pair[0]->header('Authorization')[0])->all();
+
+    expect($tokens)->toBe(['Bearer other', 'Bearer test-token']);
+});
+
+it('keeps other settings when switching token', function () {
+    Http::fake(['*' => Http::response(['account' => []])]);
+
+    client(['endpoint' => 'https://example.test/v2'])->withToken('other')->get('account');
+
+    Http::assertSent(fn (Request $r) => $r->url() === 'https://example.test/v2/account');
+});
