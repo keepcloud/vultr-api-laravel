@@ -6,6 +6,7 @@ use Illuminate\Http\Client\ConnectionException as HttpConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\LazyCollection;
 use KeepCloud\Vultr\Exceptions\AuthenticationException;
 use KeepCloud\Vultr\Exceptions\ConnectionException;
 use KeepCloud\Vultr\Exceptions\VultrException;
@@ -92,6 +93,61 @@ final class VultrClient
     public function delete(string $path): mixed
     {
         return $this->decode($this->send('DELETE', $path));
+    }
+
+    /**
+     * Lazily iterate every item of a cursor-paginated list endpoint.
+     *
+     * @param  array<string, mixed>  $query
+     * @param  string|null  $key  Collection key in the response (inferred when null).
+     * @return LazyCollection<int, mixed>
+     */
+    public function paginate(string $path, array $query = [], ?string $key = null, int $perPage = 100): LazyCollection
+    {
+        return LazyCollection::make(function () use ($path, $query, $key, $perPage) {
+            $query['per_page'] = $perPage;
+            $seen = [];
+
+            while (true) {
+                $page = $this->get($path, $query);
+
+                if (! is_object($page)) {
+                    return;
+                }
+
+                // Yield item by item: `yield from` would repeat keys across pages.
+                foreach ($this->itemsOf($page, $key) as $item) {
+                    yield $item;
+                }
+
+                $next = $page->meta->links->next ?? null;
+
+                if (! is_string($next) || $next === '' || isset($seen[$next])) {
+                    return;
+                }
+
+                $seen[$next] = true;
+                $query['cursor'] = $next;
+            }
+        });
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private function itemsOf(object $page, ?string $key): array
+    {
+        if ($key !== null) {
+            return is_array($page->{$key} ?? null) ? $page->{$key} : [];
+        }
+
+        foreach (get_object_vars($page) as $name => $value) {
+            if ($name !== 'meta' && is_array($value)) {
+                return $value;
+            }
+        }
+
+        return [];
     }
 
     /**
