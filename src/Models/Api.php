@@ -11,6 +11,7 @@ class Api
 {
     protected $endpoint;
     protected $headers;
+    protected $timeout;
 
     /**
      * Constructor
@@ -21,9 +22,11 @@ class Api
      */
     public function __construct()
     {
-        $this->endpoint = config('vultr.endpoint') ;
+        $this->endpoint = rtrim(config('vultr.endpoint', 'https://api.vultr.com/v2/'), '/') . '/';
+        $this->timeout = (int) config('vultr.timeout', 30);
         $this->headers = [
             'Content-Type: application/json',
+            'Accept: application/json',
             'Authorization: Bearer '.config('vultr.token')
         ];
     }
@@ -33,113 +36,97 @@ class Api
      *
      * @var string $url
      * @var array $query
-     * @return json
-     * 
+     * @return string|false
      */
-    public function get(string $url)
+    public function get(string $url, array $query = [])
     {
-        $url = $this->endpoint . $url;
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $url,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => $this->headers
-        ]);
-        $response = curl_exec($curl);
-        curl_close($curl);
+        if (!empty($query)) {
+            $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($query);
+        }
 
-        return $response;
+        return $this->request('GET', $url);
     }
-	
+
     /**
      * Post method
      *
      * @var string $url
-     * @var array $data	 
-     * @return json
+     * @var array $data
+     * @return string|false
      */
-    public function post(string $url, array $data=[])
+    public function post(string $url, array $data = [])
     {
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $this->endpoint . $url,
-            CURLOPT_POST => 1,
-            CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_HTTPHEADER => $this->headers
-        ]);
-        $response = curl_exec($curl);
-        curl_close($curl);
-        
-        return $response;
+        return $this->request('POST', $url, $data);
     }
 
     /**
      * Put method
      *
      * @var string $url
-     * @var array $data	 
-     * @return json
+     * @var array $data
+     * @return string|false
      */
-    public function put(string $url, array $data=[])
+    public function put(string $url, array $data = [])
     {
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $this->endpoint . $url,
-            CURLOPT_CUSTOMREQUEST => 'PUT',
-            CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_HTTPHEADER => $this->headers
-        ]);
-        $response = curl_exec($curl);
-        curl_close($curl);
-        
-        return $response;
+        return $this->request('PUT', $url, $data);
     }
-	
+
     /**
      * Patch method
      *
      * @var string $url
-     * @var array $data	 
-     * @return json
+     * @var array $data
+     * @return string|false
      */
-    public function patch(string $url, array $data=[])
+    public function patch(string $url, array $data = [])
     {
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $this->endpoint . $url,
-            CURLOPT_CUSTOMREQUEST => 'PATCH',
-            CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_HTTPHEADER => $this->headers
-        ]);
-        $response = curl_exec($curl);
-        curl_close($curl);
-        
-        return $response;
+        return $this->request('PATCH', $url, $data);
     }
 
     /**
-     * delete method
+     * Delete method
      *
      * @var string $url
-     * @return json
+     * @return string|false
      */
     public function delete(string $url)
     {
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $this->endpoint . $url,
-            CURLOPT_CUSTOMREQUEST => 'DELETE',
-            CURLOPT_HTTPHEADER => $this->headers
-        ]);
-        $response = curl_exec($curl);
-        curl_close($curl);
-        
-        return $response;
+        return $this->request('DELETE', $url);
     }
 
+    /**
+     * Send the request
+     *
+     * @var string $method
+     * @var string $url
+     * @var array|null $data
+     * @return string|false
+     */
+    protected function request(string $method, string $url, $data = null)
+    {
+        $options = [
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_URL => $this->endpoint . ltrim($url, '/'),
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_HTTPHEADER => $this->headers,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => $this->timeout,
+        ];
+
+        if ($data !== null) {
+            // An empty body must be sent as a JSON object, not an empty array.
+            $options[CURLOPT_POSTFIELDS] = empty($data) ? '{}' : json_encode($data);
+        }
+
+        $curl = curl_init();
+        curl_setopt_array($curl, $options);
+        $response = curl_exec($curl);
+
+        // curl_close() is a no-op since PHP 8.0 and deprecated since PHP 8.5.
+        if (PHP_VERSION_ID < 80000) {
+            curl_close($curl);
+        }
+
+        return $response;
+    }
 }

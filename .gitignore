@@ -1,1 +1,12 @@
+/vendor/
+composer.lock
+.phpunit.result.cache
+.DS_Store
 
+# IDE
+.idea/
+.vscode/
+
+# AI assistant files
+CLAUDE.md
+.claude/

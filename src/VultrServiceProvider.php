@@ -8,6 +8,7 @@
 namespace KeepCloud\Vultr;
 
 use Illuminate\Support\ServiceProvider;
+use KeepCloud\Vultr\Controllers\Vultr;
 
 class VultrServiceProvider extends ServiceProvider
 {
@@ -18,9 +19,11 @@ class VultrServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->publishes([
-            __DIR__.'/config/vultr.php' => config_path('vultr.php'),
-        ]);
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/config/vultr.php' => config_path('vultr.php'),
+            ], 'vultr-config');
+        }
     }
 
     /**
@@ -30,5 +33,12 @@ class VultrServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->mergeConfigFrom(__DIR__.'/config/vultr.php', 'vultr');
+
+        $this->app->singleton(Vultr::class, function () {
+            return new Vultr;
+        });
+
+        $this->app->alias(Vultr::class, 'Vultr');
     }
 }

@@ -1,87 +1,114 @@
 # Vultr Api V2 Laravel package
 
-[![Total Downloads](https://poser.pugx.org/agiuscloud/vultr-api-laravel/downloads)](https://packagist.org/packages/agiuscloud/vultr-api-laravel)
-[![License](https://poser.pugx.org/agiuscloud/vultr-api-laravel/license)](https://github.com/edisoncosta/vultr-api-laravel/blob/master/LICENSE)
+[![Total Downloads](https://poser.pugx.org/keepcloud/vultr-api-laravel/downloads)](https://packagist.org/packages/keepcloud/vultr-api-laravel)
+[![License](https://poser.pugx.org/keepcloud/vultr-api-laravel/license)](LICENSE)
 
-A simple wrapper to get started with the Vultr V2 Api.
+A simple wrapper to get started with the [Vultr V2 API](https://www.vultr.com/api/).
 
 ## Install
-```
+
+```bash
 composer require keepcloud/vultr-api-laravel
 ```
 
-After updating composer, add the ServiceProvider to the providers array in config/app.php
-```
-KeepCloud\Vultr\VultrServiceProvider::class
+The service provider and the `Vultr` facade are registered automatically through Laravel package auto-discovery.
+
+<details>
+<summary>Laravel without auto-discovery</summary>
+
+Add the service provider to the `providers` array in `config/app.php`:
+
+```php
+KeepCloud\Vultr\VultrServiceProvider::class,
 ```
 
-Optionally you can use the Facade. Add this to your facades:
-```
-'Vultr' => KeepCloud\Vultr\Facades\Vultr::class
-```
+And optionally the facade to the `aliases` array:
 
-## Publish config file
+```php
+'Vultr' => KeepCloud\Vultr\Facades\Vultr::class,
 ```
-php artisan vendor:publish
-```
+</details>
 
-## Add your personal access token to your config (/config/vultr.php) or env file
-```
+## Configuration
+
+Add your personal access token to your `.env` file:
+
+```dotenv
 VULTR_TOKEN=Your_personal_access_token
 ```
 
-You can create your token by visiting [your Vultr](https://cloud.vultr.com/profile/tokens) if you are using the newer vultr manager.
+You can create a token in the [Vultr customer portal](https://my.vultr.com/settings/#settingsapi).
+
+Optional settings:
+
+```dotenv
+VULTR_ENDPOINT=https://api.vultr.com/v2/
+VULTR_TIMEOUT=30
+```
+
+To customize the config file, publish it:
+
+```bash
+php artisan vendor:publish --tag=vultr-config
+```
 
 ## Usage
-Add to your class
+
+Paths are relative to the API endpoint (`https://api.vultr.com/v2/`). Responses are returned as decoded JSON objects.
+
+```php
+use KeepCloud\Vultr\Facades\Vultr;
+
+// account info
+Vultr::get('account');
+
+// list instances
+Vultr::get('instances');
+
+// list instances with query parameters (pagination, filters)
+Vultr::get('instances', [
+    'per_page' => 100,
+    'region'   => 'ewr',
+]);
+
+// next page, using the cursor returned in meta.links.next
+$page = Vultr::get('instances', ['per_page' => 100]);
+Vultr::get('instances', ['per_page' => 100, 'cursor' => $page->meta->links->next]);
+
+// create an instance
+Vultr::post('instances', [
+    'region' => 'ewr',
+    'plan'   => 'vc2-1c-1gb',
+    'os_id'  => 2136,
+    'label'  => 'my-server',
+]);
+
+// update an instance
+Vultr::patch('instances/{instance-id}', [
+    'label' => 'new label',
+]);
+
+// instance actions
+Vultr::post('instances/{instance-id}/reboot');
+
+// delete an instance
+Vultr::delete('instances/{instance-id}');
 ```
+
+You can also resolve the client from the container or instantiate it directly:
+
+```php
 use KeepCloud\Vultr\Controllers\Vultr;
-```
-To use
-```
+
+$vultr = app(Vultr::class);
+// or
 $vultr = new Vultr;
 
-// list vultrs
-$vultr->get('vultr/instances');
-
-// create a new vultr
-$vultr->post('vultr/instances', [
-    "region" => "us-east-1a",
-    "type" => "g5-standard-1"
-]);
-
-// update a vultr
-$vultr->put('vultr/instances/999', [
-    "label" => "new label"
-]);
-
-// delete a vultr
-$vultr->delete('vultr/instances/999');
-
+$vultr->get('regions');
 ```
 
-[Filtering & Sorting](https://developers.vultr.com/v4/filtering)
-```
-$vultr->get('vultr/distributions', [
-    "vendor" => "Debian"
-]);
-
-$vultr->get('vultr/distributions', [
-    "+or" =>
-        [
-            ["vendor" => "Debian"],
-            ["deprecated" => true]
-        ]
-]);
-```
-
-Or, you can use the facade
-```
-Vultr::get('vultr/instances');
-```
-
-[Full API reference](https://developers.vultr.com/v4/introduction)
+[Full API reference](https://www.vultr.com/api/)
 
 ## License
 
-This Vultr wrapper is open-sourced software licensed under the [MIT license](https://github.com/edisoncosta/vultr-api-laravel/blob/master/LICENSE).
+This Vultr wrapper is open-sourced software licensed under the [MIT license](LICENSE).

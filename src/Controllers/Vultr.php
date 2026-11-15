@@ -7,10 +7,9 @@
  */    
 namespace KeepCloud\Vultr\Controllers;
 
-use App\Http\Controllers\Controller;
 use KeepCloud\Vultr\Models\Api;
 
-class Vultr extends Controller
+class Vultr
 {
     protected $api ;
     protected $token ;
