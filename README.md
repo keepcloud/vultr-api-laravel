@@ -9,9 +9,7 @@ A Laravel client for the [Vultr V2 API](https://www.vultr.com/api/), built on La
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11, 12 or 13
-
-> Laravel 11 is end of life and Composer blocks its releases because of open security advisories. Prefer Laravel 12+.
+- Laravel 12 or 13
 
 Upgrading from 1.x? See [UPGRADE.md](UPGRADE.md).
 

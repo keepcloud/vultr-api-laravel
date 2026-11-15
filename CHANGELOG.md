@@ -2,7 +2,7 @@
 
 ## v2.0.0
 
-Requires PHP 8.2+ and Laravel 11, 12 or 13. See [UPGRADE.md](UPGRADE.md).
+Requires PHP 8.2+ and Laravel 12 or 13. See [UPGRADE.md](UPGRADE.md).
 
 ### Added
 - `KeepCloud\Vultr\VultrClient`, built on Laravel's HTTP client; the `Vultr` facade now resolves it.
@@ -22,7 +22,7 @@ Requires PHP 8.2+ and Laravel 11, 12 or 13. See [UPGRADE.md](UPGRADE.md).
 - `KeepCloud\Vultr\Controllers\Vultr` and `KeepCloud\Vultr\Models\Api` (still working, with their 1.x behaviour).
 
 ### Removed
-- Support for PHP < 8.2 and Laravel < 11.
+- Support for PHP < 8.2 and Laravel < 12.
 - Direct cURL usage.
 
 ## v1.1.0

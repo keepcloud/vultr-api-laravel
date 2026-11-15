@@ -5,7 +5,7 @@
 ### Requirements
 
 - PHP **8.2+** (was 7.0+)
-- Laravel **11, 12 or 13** (was 5.5+)
+- Laravel **12 or 13** (was 5.5+). Laravel 11 is not supported: it is end of life and has open security advisories.
 
 ### The `Vultr` facade throws on errors
 
