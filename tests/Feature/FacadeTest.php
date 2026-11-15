@@ -37,3 +37,21 @@ it('exposes paginate and withToken', function () {
         ->and(Vultr::withToken('other'))->toBeInstanceOf(VultrClient::class)
         ->and(Vultr::withToken('other'))->not->toBe(Vultr::getFacadeRoot());
 });
+
+it('works with the README Http::fake example', function () {
+    Http::fake([
+        'api.vultr.com/v2/account' => Http::response(['account' => ['name' => 'Test']]),
+    ]);
+
+    expect(Vultr::get('account')->account->name)->toBe('Test');
+});
+
+it('falls back to defaults for keys missing from a published v1 config', function () {
+    // A 1.x published config only has endpoint and token.
+    $client = VultrClient::fromConfig(['endpoint' => 'https://api.vultr.com/v2/', 'token' => 't']);
+    $sequence = Http::sequence()->push(['e' => 1], 500)->push(['e' => 1], 500)->push(['ok' => true]);
+    Http::fake(['*' => $sequence]);
+
+    expect($client->get('account')->ok)->toBeTrue(); // default retries = 2
+    Http::assertSentCount(3);
+});

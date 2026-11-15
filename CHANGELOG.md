@@ -1,5 +1,30 @@
 # Changelog
 
+## v2.0.0
+
+Requires PHP 8.2+ and Laravel 11, 12 or 13. See [UPGRADE.md](UPGRADE.md).
+
+### Added
+- `KeepCloud\Vultr\VultrClient`, built on Laravel's HTTP client; the `Vultr` facade now resolves it.
+- Typed exceptions: `AuthenticationException`, `NotFoundException`, `ValidationException`, `RateLimitException` (with `retryAfter`), `ServerException` and `ConnectionException`, all extending `VultrException`.
+- Automatic retries: 429 for every method; 5xx and connection errors for GET, PUT and DELETE only.
+- `paginate()` returning a `LazyCollection` over cursor-paginated endpoints.
+- `withToken()` for using several Vultr accounts.
+- `send()` returning the raw `Response` without throwing.
+- Config keys `connect_timeout`, `retries` and `retry_delay`.
+- Pest test suite, Pint, Larastan and GitHub Actions CI.
+
+### Changed
+- The facade throws on API errors instead of returning the error body.
+- A missing token throws `AuthenticationException` before any request.
+
+### Deprecated
+- `KeepCloud\Vultr\Controllers\Vultr` and `KeepCloud\Vultr\Models\Api` (still working, with their 1.x behaviour).
+
+### Removed
+- Support for PHP < 8.2 and Laravel < 11.
+- Direct cURL usage.
+
 ## v1.1.0
 
 ### Fixed
