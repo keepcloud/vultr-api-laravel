@@ -100,3 +100,11 @@ it('yields nothing on an empty list', function () {
 
     expect(paginator()->paginate('instances')->all())->toBe([]);
 });
+
+it('keeps filters written in the path', function () {
+    Http::fake(['*' => Http::response(page('instances', ['a'], ''))]);
+
+    paginator()->paginate('instances?label=web')->all();
+
+    Http::assertSent(fn (Request $r) => $r->url() === 'https://api.vultr.com/v2/instances?label=web&per_page=100');
+});

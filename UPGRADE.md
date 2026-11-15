@@ -38,6 +38,8 @@ try {
 
 Successful responses keep the same shape (`stdClass`, `null` for empty bodies), so code that only handles the success path does not change.
 
+The facade client is a singleton that reads `config('vultr')` once. If you switched accounts with `config(['vultr.token' => ...])` before each call, use `Vultr::withToken($token)` instead (the deprecated legacy classes still read the config on every call).
+
 A missing `VULTR_TOKEN` now throws `AuthenticationException` before any request is sent.
 
 ### Retries

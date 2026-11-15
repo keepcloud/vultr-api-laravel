@@ -67,7 +67,7 @@ class Vultr
             default => [[], $payload],
         };
 
-        $response = app(VultrClient::class)->send($name, $path, $query, $data);
+        $response = VultrClient::fromConfig((array) config('vultr'))->send($name, $path, $query, $data);
 
         return json_decode($response->body());
     }

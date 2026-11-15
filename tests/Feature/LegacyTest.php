@@ -51,3 +51,16 @@ it('legacy Api returns empty string on 204', function () {
 
     expect((new Api)->delete('instances/x'))->toBe('');
 });
+
+it('legacy classes read the token from config on every call like v1', function () {
+    Http::fake(['*' => Http::response(['account' => []])]);
+
+    LegacyVultr::get('account');
+    config(['vultr.token' => 'tenant-b']);
+    LegacyVultr::get('account');
+    (new Api)->get('account');
+
+    $tokens = Http::recorded()->map(fn ($pair) => $pair[0]->header('Authorization')[0])->all();
+
+    expect($tokens)->toBe(['Bearer test-token', 'Bearer tenant-b', 'Bearer tenant-b']);
+});

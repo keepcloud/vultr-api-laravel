@@ -107,6 +107,8 @@ Vultr::withToken($customer->vultr_token)->get('instances');
 
 `withToken()` returns a new client; the default one is not changed.
 
+The `Vultr` facade is a singleton that reads `config('vultr')` once, when first resolved. Changing `vultr.token` at runtime does not affect it: use `withToken()` for per-tenant tokens.
+
 ### Errors
 
 Failed requests throw an exception extending `KeepCloud\Vultr\Exceptions\VultrException`. The message is the API's `error` field, the code is the HTTP status and `$e->response` holds the response.

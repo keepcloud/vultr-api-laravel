@@ -55,6 +55,6 @@ class Api
 
     private function client(): VultrClient
     {
-        return app(VultrClient::class);
+        return VultrClient::fromConfig((array) config('vultr'));
     }
 }

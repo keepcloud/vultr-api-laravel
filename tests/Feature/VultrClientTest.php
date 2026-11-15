@@ -197,3 +197,11 @@ it('keeps other settings when switching token', function () {
 
     Http::assertSent(fn (Request $r) => $r->url() === 'https://example.test/v2/account');
 });
+
+it('merges a query string in the path with the query array', function () {
+    Http::fake(['*' => Http::response(['instances' => []])]);
+
+    client()->get('instances?region=ewr', ['per_page' => 5]);
+
+    Http::assertSent(fn (Request $r) => $r->url() === 'https://api.vultr.com/v2/instances?region=ewr&per_page=5');
+});

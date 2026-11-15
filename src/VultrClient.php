@@ -174,6 +174,14 @@ final class VultrClient
             ->connectTimeout($this->connectTimeout)
             ->retry($this->retries + 1, $this->retryDelay, fn (Throwable $e) => $this->shouldRetry($e, $method), throw: false);
 
+        // Guzzle's `query` option replaces a query string written in the path,
+        // so merge both (the array wins on duplicate keys).
+        if (str_contains($path, '?')) {
+            [$path, $inline] = explode('?', $path, 2);
+            parse_str($inline, $inlineQuery);
+            $query = array_merge($inlineQuery, $query);
+        }
+
         $options = [];
 
         if ($query !== []) {
